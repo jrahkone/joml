@@ -1,0 +1,153 @@
+package fi.captam.joml;
+
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+public class Joml {
+	static String filename;
+	public static Joml parse(String fname) {
+		Joml j = new Joml();
+		filename = fname;
+		j._parse(readFile(fname));
+		j._validate();
+		return j;
+	}
+
+	Map<String,String> map = new LinkedHashMap<>();
+	void _parse(String str) {
+		int linenum = 0;
+		String prefix = null;
+		String line = "";
+		for (String l : lines(str)) {
+			linenum++;
+			l = trim(l);
+			if (l.length()==0) continue;
+			if (l.endsWith("\\")) {
+				line+=l.substring(0,l.length()-1); continue;
+			}
+			line+=l;
+			if (line.startsWith("#")) {line=""; continue;}
+			line = line.replaceFirst("[^\\\\]#.*","");
+			line = line.replaceAll("\\\\#", "#");
+			if (line.startsWith("[")) {
+				prefix = trim(line.substring(1,line.indexOf(']')));
+				line=""; continue;
+			}
+			int idx = line.indexOf('=');
+			if (idx>0) {
+				String key = trim(line.substring(0,idx));
+				String value = trim(line.substring(idx+1));
+				if (!empty(prefix)) key = prefix+"."+key;
+				map.put(key,value);
+				line="";continue;
+			}
+			fail("invalid line: "+linenum+" in file:"+filename+" : "+line);
+		}
+	}
+	void _validate() { for (String key:map.keySet()) { String val = get(key);}}
+
+	String env_name = null;
+	String env_num = null;
+	void env(String name, String num) { env_name = name; env_num = num;}
+	public String get(String key) {
+		int idx = key.lastIndexOf('.'); if (idx<0) return get("",key);
+		return get(key.substring(0,idx+1),key.substring(idx+1));
+	}
+	public String get(String prefix, String key) {
+		if (eq("env-num",key)) return ""+env_num;
+		if (eq("env-name",key)) return env_name;
+		if (env_name!=null) {
+			String prefix2 = "env."+env_name+"."+env_num+"."+prefix;
+			if (map.containsKey(prefix2+key)) { prefix=prefix2; }
+		}
+		String fk = prefix+key; String val = map.get(fk);
+		if (val==null) fail("not found: "+fk);
+		return evalLine(prefix,val);
+	}
+
+	String evalLine(String prefix, String val) {
+		while (true) {
+			int idx = find(val,"$(");
+			if (idx < 0) break;
+			String p1 = idx>0?val.substring(0,idx):"";
+			String r = val.substring(idx+2);
+			int idx2 = r.indexOf(')');
+			if (idx2 < 0) fail("parse error:"+val);
+			String ex = r.substring(0,idx2);
+			String p2 = r.substring(idx2+1);
+			if (ex.indexOf('.')>0) val = p1+get(ex)+p2;
+			else val = p1+get(prefix,ex)+p2;
+		}
+		return val;
+	}
+	int find(String str, String part) {
+		while (true) {
+			int idx = str.indexOf(part);
+			if (idx>0&&str.charAt(idx-1)=='\\') { str = str.substring(idx+1); continue;}
+			return idx;
+		}
+	}
+
+	public String toString() {
+		StringBuilder sb = new StringBuilder();
+		for (String key:map.keySet()) { sb.append(key+"="+map.get(key)+"\n");}
+		return sb.toString();
+	}
+
+	public String evalFile(String src) {
+		StringBuilder out = new StringBuilder();
+		for (String line:lines(readFile(src))) { out.append(evalLine("",line)+"\n"); }
+		return out.toString();
+	}
+
+	public static void main(String args[]) {
+		// java -jar joml.jar env.joml local 0 get uljas.branch
+		// java -jar joml.jar env.joml local 0 tmplfile outfile
+		// java -jar joml.jar env.joml local 0 tmplfile
+
+		if (args.length==0) {test();return;}
+		if (!Files.exists(Paths.get(args[0]))) fail("config file does not exist: "+args[0]);
+		Joml j = parse(args[0]);
+		j.env(args[1],args[2]);
+		if (eq("get",args[3])) { System.out.print(""+j.get(args[4])); return; }
+		if (!Files.exists(Paths.get(args[3]))) fail("input file does not exist: "+args[3]);
+		if (args.length>4) writeFile(args[4],j.evalFile(args[3]));
+		else print(j.evalFile(args[3]));
+	}
+
+	static void test() {
+		String dir = "src/fi/captam/joml/";
+		Joml j = parse(dir+"example.joml");
+		print("joml:\n"+j);
+		print("var1:"+j.get("map2.var1"));
+		print("map1.key1:"+j.get("map1.key1"));
+		j.env("test","1");
+		print("map1.key1:"+j.get("map1.key1"));
+		j.env("test","2");
+		print("map1.key1:"+j.get("map1.key1"));
+		print(""+j.evalFile(dir+"example.conf"));
+	}
+
+
+	// ====== util tree shake =======
+	public static String readFile(String fname) {
+		try {return new String(Files.readAllBytes(Paths.get(fname)));} catch (Exception e) {fail(e);return null;}
+	}
+	public static void writeFile(String fname, Object o) {
+		try {Files.write(Paths.get(fname),(""+o).getBytes());} catch (Exception e) {fail(e);}
+	}
+	public static boolean eq(Object o1, Object o2){
+		if (o1 == null && o2 == null) return true;
+		if (o1 == null || o2 == null) return false;
+		return o1.equals(o2);
+	}
+	public static boolean empty(String o){ return trim(o).length()==0;}
+	public static void print(Object o) {System.out.println(""+o);}
+	public static void fail(Object o) {print(o);throw new RuntimeException(""+o);}
+	public static String nn(Object o) {return o==null?"":""+o;}
+	public static String trim(Object o) {return nn(o).trim();}
+	public static String[] lines(String str) { return str.split("\r\n|\r|\n");}
+
+}
