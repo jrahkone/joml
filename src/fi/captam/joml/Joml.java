@@ -15,6 +15,7 @@ public class Joml {
 		return j;
 	}
 
+	Map<String,String> inherits = new LinkedHashMap<>();
 	Map<String,String> map = new LinkedHashMap<>();
 	void _parse(String str) {
 		int linenum = 0;
@@ -33,6 +34,8 @@ public class Joml {
 			line = line.replaceAll("\\\\#", "#");
 			if (line.startsWith("[")) {
 				prefix = trim(line.substring(1,line.indexOf(']')));
+				String p[]=prefix.split(":");
+				if (p.length==2) { prefix = trim(p[0]); inherits.put(prefix,trim(p[1]));}
 				line=""; continue;
 			}
 			int idx = line.indexOf('=');
@@ -56,11 +59,16 @@ public class Joml {
 		return get(key.substring(0,idx+1),key.substring(idx+1));
 	}
 	public String get(String prefix, String key) {
-		if (eq("env-num",key)) return ""+env_num;
 		if (eq("env-name",key)) return env_name;
+		if (eq("env-num",key)) return ""+env_num;
 		if (env_name!=null) {
-			String prefix2 = "env."+env_name+"."+env_num+"."+prefix;
+			String envpr = "env."+env_name+"."+env_num;
+			String prefix2 = envpr+"."+prefix;
 			if (map.containsKey(prefix2+key)) { prefix=prefix2; }
+			else if (inherits.containsKey(envpr)) {
+				String key2 = "env."+inherits.get(envpr)+"."+prefix;
+				if (map.containsKey(key2+key)) { prefix = key2;}
+			}
 		}
 		String fk = prefix+key; String val = map.get(fk);
 		if (val==null) fail("not found: "+fk);
@@ -118,16 +126,18 @@ public class Joml {
 	}
 
 	static void test() {
-		String dir = "src/fi/captam/joml/";
+		String dir = "./";
 		Joml j = parse(dir+"example.joml");
 		print("joml:\n"+j);
 		print("var1:"+j.get("map2.var1"));
 		print("map1.key1:"+j.get("map1.key1"));
 		j.env("test","1");
 		print("map1.key1:"+j.get("map1.key1"));
+		print("inherited:"+j.get("map1.test"));
 		j.env("test","2");
 		print("map1.key1:"+j.get("map1.key1"));
-		print(""+j.evalFile(dir+"example.conf"));
+		print(""+j.evalFile(dir+"example.tmpl"));
+		print("inherit:"+j.get("map1.test"));
 	}
 
 
