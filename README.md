@@ -57,7 +57,23 @@ Example
   	  line value
   value2 = multiline \
            value       # value1 == value2 
-  
+
+[win10]
+  path  = C:\windows\system32\drivers   # only # and $ are escaped with '\'
+  path2 = C:\\easy\to\write\windoze\paths  # no need to escape escape
+
+#
+# env. prefix is only reserved prefix keyword and it is used
+# when configuration is evaluated for given environment
+#
+
+[env.local.1]
+  port = 7777
+
+[env.local.2]         # env. prefix is only special keyword 
+  server.port = 8888  # this overrides server.port = 8080 above      
+  usb.userid = 22222  # this overrides usb.userid = 11111 above
+
 ```
 
 Syntax
@@ -65,10 +81,18 @@ Syntax
 - all lines are terminated by \n or \r\n or \r
 - all lines are trimmed (so indentions are optional)
 - empty lines are ignored
-- comment lines start with #
-- end of line comment starts from first # that is not escaped with \
+- comment lines start with '#'
+- end of line comment starts from first '#' that is not escaped with '\'
 - line can be either
   1. key = value
   or
   2. [prefix.a.b.c]
+- prefix which starts with "env." are environments: for example
+  "env.local.2" means that it overrides given settings
+  when configuration is evaluated for envionment "local 2"
+- values are strings from first '=' to end of line and trimmed
+- keys are any strings that do not contain '='
+- by escaping the line end by '\' produces multiline values
+- $(var.name) will be substituted with config var.name value when evaluated
+
 
