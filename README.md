@@ -58,6 +58,21 @@ Example
   value2 = multiline \
            value       # value1 == value2 
 
+
+# [prefix] is just a prefix so following:
+
+[foo.bar]
+  hello = jep
+  again = jop
+  
+# is equivalent for:
+
+foo.bar.hello = jep
+foo.bar.again = jop
+
+# any prefix is valid and used until next prefix line
+
+
 [win10]
   path  = C:\windows\system32\drivers   # only # and $ are escaped with '\'
   path2 = C:\\easy\to\write\windoze\paths  # no need to escape escape
@@ -94,5 +109,18 @@ Syntax
 - keys are any strings that do not contain '='
 - by escaping the line end by '\\' produces multiline values
 - $(var.name) will be substituted with config var.name value when evaluated
+
+
+Tool
+-----
+Reference implementation is done in java and is in src dir.
+Build with running "mk" shell script. Build produces joml.jar
+which can be run with:
+```
+java -jar joml.jar env.joml local 2 in.tmpl out.conf
+java -jar joml.jar env.joml local 2 in.tmpl > out.conf
+java -jar joml.jar env.joml local 2 get server.port
+```
+
 
 
