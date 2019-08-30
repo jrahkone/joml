@@ -21,7 +21,7 @@ Key design decisions and features
 -----------------------------------
 - only key value pairs
 - only one level of nesting with prefix
-- one level of inheritance (to be implemented)
+- one level of inheritance
 - use of variables
 - eval template
 
@@ -81,11 +81,14 @@ foo.bar.again = jop
 # env. prefix is only reserved prefix keyword and it is used
 # when configuration is evaluated for given environment
 #
+[env.base]
+  server.port = 10101
+  base.value = this is base value
+  
+[env.local.1 : base]
+  server.port = 7777
 
-[env.local.1]
-  port = 7777
-
-[env.local.2]         # env. prefix is only special keyword 
+[env.local.2 : base]  # env. prefix is only special keyword  inherits env.base 
   server.port = 8888  # this overrides server.port = 8080 above      
   usb.userid = 22222  # this overrides usb.userid = 11111 above
 
@@ -105,6 +108,7 @@ Syntax
 - prefix which starts with "env." are environments: for example
   "env.local.2" means that it overrides given settings
   when configuration is evaluated for envionment "local 2"
+- prefix env.foo.1 : bar means that env.foo.1 inherits all props of env.bar 
 - values are strings from first '=' to end of line and trimmed
 - keys are any strings that do not contain '='
 - by escaping the line end by '\\' produces multiline values
