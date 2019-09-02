@@ -45,7 +45,7 @@ Example
 
 # this is a comment line
 
-[cluster.s1]          # end of line komment
+[cluster.s1]          # end of line comment
   port = 9001
   tag = \#hashtag     # if value has # it must be escaped
   dollar = \$(sign)   # if value contains $( and its not variable
