@@ -1,4 +1,5 @@
 /bin/
+joml.jar
+/out/
 .classpath
 .project
-joml.jar

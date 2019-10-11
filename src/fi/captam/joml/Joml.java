@@ -1,23 +1,25 @@
 package fi.captam.joml;
 
+import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class Joml {
-	static String filename;
-	public static Joml parse(String fname) {
+	//static String filename;
+	public static Joml parse(String...fnames) {
 		Joml j = new Joml();
-		filename = fname;
-		j._parse(readFile(fname));
+		for (String fname:fnames) j._parse(fname);
 		j._validate();
 		return j;
 	}
 
 	Map<String,String> inherits = new LinkedHashMap<>();
 	Map<String,String> map = new LinkedHashMap<>();
-	void _parse(String str) {
+	void _parse(String fname) {
+		String str = readFile(fname);
 		int linenum = 0;
 		String prefix = null;
 		String line = "";
@@ -46,7 +48,7 @@ public class Joml {
 				map.put(key,value);
 				line="";continue;
 			}
-			fail("invalid line: "+linenum+" in file:"+filename+" : "+line);
+			fail("invalid line: "+linenum+" in file:"+fname+" : "+line);
 		}
 	}
 	void _validate() { for (String key:map.keySet()) { String val = get(key);}}
@@ -104,60 +106,65 @@ public class Joml {
 		return sb.toString();
 	}
 
-	public String evalFile(String src) {
+	public int evalDir(File dir) {
+		int sum = 0;
+		for (File f:dir.listFiles()) {
+			if (f.isDirectory()) {
+				sum+=evalDir(f);
+			} else {
+				if (f.getName().endsWith(".tmpl")) {
+					String infname = f.getAbsolutePath();
+					String outfname = infname.substring(0,infname.length()-5);
+					String res = evalFile(infname);
+					writeFile(outfname,res);
+					sum++;
+				}
+			}
+		}
+		return sum;
+	}
+	public String evalFile(String fname) {
 		StringBuilder out = new StringBuilder();
-		for (String line:lines(readFile(src))) { out.append(evalLine("",line)+"\n"); }
+		for (String line:lines(readFile(fname))) { out.append(evalLine("",line)+"\n"); }
 		return out.toString();
 	}
 
 	public static void main(String args[]) {
-		// java -jar joml.jar env.joml local 0 get uljas.branch
-		// java -jar joml.jar env.joml local 0 tmplfile outfile
-		// java -jar joml.jar env.joml local 0 tmplfile
-
-		if (args.length==0) {test();return;}
-		if (!Files.exists(Paths.get(args[0]))) fail("config file does not exist: "+args[0]);
-		Joml j = parse(args[0]);
-		j.env(args[1],args[2]);
-		if (eq("get",args[3])) { System.out.print(""+j.get(args[4])); return; }
-		if (!Files.exists(Paths.get(args[3]))) fail("input file does not exist: "+args[3]);
-		if (args.length>4) writeFile(args[4],j.evalFile(args[3]));
-		else print(j.evalFile(args[3]));
+		run(args);
 	}
 
-	static void test() {
-		String dir = "./";
-		Joml j = parse(dir+"example.joml");
-		print("joml:\n"+j);
-		print("var1:"+j.get("map2.var1"));
-		print("map1.key1:"+j.get("map1.key1"));
-		j.env("test","1");
-		print("map1.key1:"+j.get("map1.key1"));
-		print("inherited:"+j.get("map1.test"));
-		j.env("test","2");
-		print("map1.key1:"+j.get("map1.key1"));
-		print(""+j.evalFile(dir+"example.tmpl"));
-		print("inherit:"+j.get("map1.test"));
+	public static Joml run(String...args) {
+		String env = args[0];
+		String num = args[1];
+		int last = 2;
+		for (;last<args.length;last++) {
+			String fname = args[last];
+			if (!fname.endsWith(".joml")) {break;}
+		}
+		if (last == 2) usage("no joml files given");
+		Joml j = Joml.parse(Arrays.copyOfRange(args,2,last));
+		if (last<args.length) {
+			File dir = new File(args[last]);
+			if (!dir.isDirectory()) usage("invalid directory: "+dir);
+			j.evalDir(dir);
+		}
+		return j;
 	}
 
+
+	static void usage(String msg) {
+		print("usage: java -jar joml.jar env num env.joml [other.joml...] conf/");
+		fail(msg);
+	}
 
 	// ====== util tree shake =======
-	public static String readFile(String fname) {
-		try {return new String(Files.readAllBytes(Paths.get(fname)));} catch (Exception e) {fail(e);return null;}
-	}
-	public static void writeFile(String fname, Object o) {
-		try {Files.write(Paths.get(fname),(""+o).getBytes());} catch (Exception e) {fail(e);}
-	}
-	public static boolean eq(Object o1, Object o2){
-		if (o1 == null && o2 == null) return true;
-		if (o1 == null || o2 == null) return false;
-		return o1.equals(o2);
-	}
+	public static String readFile(String fname) {try {return new String(Files.readAllBytes(Paths.get(fname)));} catch (Exception e) {fail(e);return null;}}
+	public static void writeFile(String fname, Object o) { try {Files.write(Paths.get(fname),(""+o).getBytes());} catch (Exception e) {fail(e);}}
+	public static boolean eq(Object o1, Object o2){	if (o1 == null && o2 == null) return true; if (o1 == null || o2 == null) return false; return o1.equals(o2);}
 	public static boolean empty(String o){ return trim(o).length()==0;}
 	public static void print(Object o) {System.out.println(""+o);}
 	public static void fail(Object o) {print(o);throw new RuntimeException(""+o);}
 	public static String nn(Object o) {return o==null?"":""+o;}
 	public static String trim(Object o) {return nn(o).trim();}
 	public static String[] lines(String str) { return str.split("\r\n|\r|\n");}
-
 }
