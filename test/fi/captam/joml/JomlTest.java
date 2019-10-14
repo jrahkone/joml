@@ -42,7 +42,21 @@ public class JomlTest {
 		assertFileContains("tmpl/keys.dump","map1.simple.foo");
 	}
 
+	public static void testIf() throws Exception {
+		Joml j = Joml.run("env.joml","--dir","tmpl","--env","test","--num","1");
+		assertFileContains("tmpl/tst.txt","hello not prod");
+		assertFileContains("tmpl/tst.txt","always here");
+		assertFileContains("tmpl/tst.txt","always here 2");
+		assertFileContainsNot("tmpl/tst.txt","hello prod");
+		j = Joml.run("env.joml","--dir","tmpl","--env","prod","--num","1");
+		assertFileContains("tmpl/tst.txt","hello prod");
+		assertFileContainsNot("tmpl/tst.txt","hello not prod");
+		assertFileContains("tmpl/tst.txt","always here");
+		assertFileContains("tmpl/tst.txt","always here 2");
+	}
+
 	static void assertFileContains(String fname, String str) throws Exception { if (!Joml.readFile(fname).contains(str)) throw new Exception();}
+	static void assertFileContainsNot(String fname, String str) throws Exception { if (Joml.readFile(fname).contains(str)) throw new Exception();}
 	static void assertEquals(Object o1, Object o2) throws Exception { if (!eq(o1,o2)) throw new Exception();}
 	static void assertTrue(boolean v) throws Exception {if(!v) throw new Exception();}
 	public static boolean eq(Object o1, Object o2){	if (o1 == null && o2 == null) return true; if (o1 == null || o2 == null) return false; return o1.equals(o2);}

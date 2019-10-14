@@ -123,9 +123,22 @@ public class Joml {
 		return sum;
 	}
 	public String evalFile(String fname) {
-		StringBuilder out = new StringBuilder();
-		for (String line:lines(readFile(fname))) { out.append(evalLine("",line)+"\n"); }
-		return out.toString();
+		StringBuilder sb = new StringBuilder();
+		boolean isif = false;
+		boolean valif = false;
+		for (String line:lines(readFile(fname))) {
+			if (line.startsWith("#if(")) {
+				line=line.substring(4,line.indexOf(')'));
+				boolean not = false;
+				if (line.startsWith("!")) { not = true; line=trim(line.substring(1));}
+				valif = eq(line,env_name); if (not) valif=!valif;
+				isif = true; continue;
+			}
+			if (line.startsWith("#end")) { isif=false; continue; }
+			if (isif && !valif) {continue;}
+			sb.append(evalLine("",line)+"\n");
+		}
+		return sb.toString();
 	}
 
 	public static void main(String args[]) {run(args);}

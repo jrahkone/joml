@@ -2,4 +2,8 @@
 key1.txt1=key1 txt1
 key1.txt2=key1 txt2
 
-test=this is env1
+test=value1
+
+always here
+hello prod
+always here 2
