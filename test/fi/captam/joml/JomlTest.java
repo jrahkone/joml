@@ -37,6 +37,11 @@ public class JomlTest {
 		assertFileContains("tmpl/tst.txt","test=this is env1");
 	}
 
+	public static void testDump() throws Exception {
+		Joml j = Joml.run("env.joml","secrets.joml","--dump","tmpl/keys.dump");
+		assertFileContains("tmpl/keys.dump","map1.simple.foo");
+	}
+
 	static void assertFileContains(String fname, String str) throws Exception { if (!Joml.readFile(fname).contains(str)) throw new Exception();}
 	static void assertEquals(Object o1, Object o2) throws Exception { if (!eq(o1,o2)) throw new Exception();}
 	static void assertTrue(boolean v) throws Exception {if(!v) throw new Exception();}

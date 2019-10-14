@@ -4,6 +4,7 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -141,6 +142,13 @@ public class Joml {
 		}
 		if (fnames.size()==0) usage("no joml files given");
 		Joml j = Joml.parse(fnames.toArray(new String[fnames.size()]));
+		if (dumpfname!=null) {
+			List<String> keys = new ArrayList<>(j.map.keySet());
+			Collections.sort(keys);
+			StringBuilder sb = new StringBuilder();
+			for (String key:keys) { sb.append(key+"\n");}
+			writeFile(dumpfname,sb);
+		}
 		if (dirname!=null) {
 			File dir = new File(dirname);
 			if (!dir.isDirectory()) usage("invalid directory: "+dirname);
