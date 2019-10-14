@@ -16,7 +16,7 @@ public class JomlTest {
 	}
 
 	public static void test() throws Exception {
-		Joml j = Joml.run("test","0","env.joml","secrets.joml");
+		Joml j = Joml.run("env.joml","secrets.joml");
 		assertEquals(j.get("key1.passwd"),"password123");
 		assertEquals(j.get("key1.txt1"),"key1 txt1");
 		assertEquals(j.get("key1.txt2"),"key1 txt2");
@@ -24,11 +24,17 @@ public class JomlTest {
 
 	public static void testDirs() throws Exception {
 		Files.deleteIfExists(Paths.get("tmpl/tst.txt"));
-		Joml j = Joml.run("test","0","env.joml","secrets.joml","tmpl");
+		Joml j = Joml.run("env.joml","secrets.joml","--dir","tmpl");
 		assertTrue(Files.exists(Paths.get("tmpl/tst.txt")));
 		assertFileContains("tmpl/tst.txt","key1.txt1=key1 txt1");
 		assertFileContains("tmpl/dir1/foo.txt","map2.host=localhost-foobar\n");
 		assertFileContains("tmpl/dir1/dir11/bar.txt","server=77\n");
+	}
+
+	public static void testEnv() throws Exception {
+		Joml j = Joml.run("env.joml","secrets.joml","--dir","tmpl","--env","test","--num","1");
+		assertTrue(Files.exists(Paths.get("tmpl/tst.txt")));
+		assertFileContains("tmpl/tst.txt","test=this is env1");
 	}
 
 	static void assertFileContains(String fname, String str) throws Exception { if (!Joml.readFile(fname).contains(str)) throw new Exception();}

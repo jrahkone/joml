@@ -1,0 +1,50 @@
+# comment row
+
+[map1]
+  key1 = value1 # end line comment
+  key2 = multi\
+         line \
+         value
+  foo.bar = sub map value
+  hello = includes hash \# in value # comment contains hash # again
+  hello2 = \#hash in value again   
+  
+simple.key = svalue1  # goes into map1 - indentation does not matter
+simple.foo = bar
+
+[server]
+  a = 77
+  var1 = 50000  # should not loop when map2.var1 is evaluated
+  host = 127.0.0.$(a)
+  port = 9090-$(var1)
+
+[ map2 ]
+  host = localhost-$(var2)
+  var2 = foobar
+  port = 8080
+  dollar = \$(dollar)
+  var1 = $(host):$(port) or $(server.host):$(server.port)
+  hashes = this contains \# hash
+
+[key1]
+  txt1 = key1 txt1
+
+[key1]  # same group again, should just combine with previous
+  txt2 = key1 txt2
+  
+
+[env.base]   # inheritance test
+  map1.test = basevalue1
+  
+[env.test.1 : base] 
+  map1.key1 = this is env1
+  
+[env.test.2 : base]    # implement inheritance and test [env.test.2 : base]
+  map1.host = host1 in env2, server: $(server.a)
+  map1.key1 = this is env2, host:$(host)
+  map2.host= host2
+  map1.test = override
+
+  
+
+

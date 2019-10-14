@@ -3,19 +3,18 @@ package fi.captam.joml;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 public class Joml {
-	//static String filename;
 	public static Joml parse(String...fnames) {
 		Joml j = new Joml();
 		for (String fname:fnames) j._parse(fname);
 		j._validate();
 		return j;
 	}
-
 	Map<String,String> inherits = new LinkedHashMap<>();
 	Map<String,String> map = new LinkedHashMap<>();
 	void _parse(String fname) {
@@ -52,7 +51,6 @@ public class Joml {
 		}
 	}
 	void _validate() { for (String key:map.keySet()) { String val = get(key);}}
-
 	String env_name = null;
 	String env_num = null;
 	void env(String name, String num) { env_name = name; env_num = num;}
@@ -129,31 +127,36 @@ public class Joml {
 		return out.toString();
 	}
 
-	public static void main(String args[]) {
-		run(args);
-	}
-
+	public static void main(String args[]) {run(args);}
 	public static Joml run(String...args) {
-		String env = args[0];
-		String num = args[1];
-		int last = 2;
-		for (;last<args.length;last++) {
-			String fname = args[last];
-			if (!fname.endsWith(".joml")) {break;}
+		String env=null,num=null,dirname=null,dumpfname = null;
+		List<String> fnames = new ArrayList<>();
+		for (int i=0;i<args.length;i++) {
+			if (eq(args[i],"--dir")) { dirname = opt(args,++i); continue;}
+			if (eq(args[i],"--env")) { env = opt(args,++i); continue;}
+			if (eq(args[i],"--num")) { num = opt(args,++i); continue;}
+			if (eq(args[i],"--dump")) { dumpfname = opt(args,++i); continue;}
+			if (args[i].matches(".*\\.(joml|yml|jml)$")) {fnames.add(args[i]);continue;}
+			usage("invalid arg: "+args[i]);
 		}
-		if (last == 2) usage("no joml files given");
-		Joml j = Joml.parse(Arrays.copyOfRange(args,2,last));
-		if (last<args.length) {
-			File dir = new File(args[last]);
-			if (!dir.isDirectory()) usage("invalid directory: "+dir);
+		if (fnames.size()==0) usage("no joml files given");
+		Joml j = Joml.parse(fnames.toArray(new String[fnames.size()]));
+		if (dirname!=null) {
+			File dir = new File(dirname);
+			if (!dir.isDirectory()) usage("invalid directory: "+dirname);
+			j.env(env,num);
 			j.evalDir(dir);
 		}
 		return j;
 	}
 
+	static String opt(String args[], int idx) {
+		if (idx>=args.length) usage("expected arg for "+args[idx-1]);
+		return args[idx];
+	}
 
 	static void usage(String msg) {
-		print("usage: java -jar joml.jar env num env.joml [other.joml...] conf/");
+		print("usage: java -jar joml.jar --env name --num num env.joml [other.joml...] --dir conf/");
 		fail(msg);
 	}
 
