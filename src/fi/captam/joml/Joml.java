@@ -1,6 +1,8 @@
 package fi.captam.joml;
 
 import java.io.File;
+import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -8,6 +10,8 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Joml {
 	public static Joml parse(String...fnames) {
@@ -51,7 +55,7 @@ public class Joml {
 			fail("invalid line: "+linenum+" in file:"+fname+" : "+line);
 		}
 	}
-	void _validate() { for (String key:map.keySet()) { String val = get(key);}}
+	void _validate() { for (String key:map.keySet()) {String val = get(key);}}
 	String env_name = null;
 	String env_num = null;
 	void env(String name, String num) { env_name = name; env_num = num;}
@@ -141,20 +145,28 @@ public class Joml {
 		return sb.toString();
 	}
 
-	public static void main(String args[]) {run(args);}
+	public static void main(String args[]) {
+		//run("env.joml","--env","test","--num","1","--test","conn.");
+		run(args);
+	}
 	public static Joml run(String...args) {
-		String env=null,num=null,dirname=null,dumpfname = null;
+		String env=null,num=null,dirname=null,dumpfname = null, testprefix=null;
 		List<String> fnames = new ArrayList<>();
 		for (int i=0;i<args.length;i++) {
 			if (eq(args[i],"--dir")) { dirname = opt(args,++i); continue;}
 			if (eq(args[i],"--env")) { env = opt(args,++i); continue;}
 			if (eq(args[i],"--num")) { num = opt(args,++i); continue;}
 			if (eq(args[i],"--dump")) { dumpfname = opt(args,++i); continue;}
+			if (eq(args[i],"--test")) { testprefix = opt(args,++i); continue;}
 			if (args[i].matches(".*\\.(joml|yml|jml)$")) {fnames.add(args[i]);continue;}
 			usage("invalid arg: "+args[i]);
 		}
 		if (fnames.size()==0) usage("no joml files given");
 		Joml j = Joml.parse(fnames.toArray(new String[fnames.size()]));
+		if (testprefix!=null) {
+			j.testAll(env,num,testprefix);
+			return j;
+		}
 		if (dumpfname!=null) {
 			List<String> keys = new ArrayList<>(j.map.keySet());
 			Collections.sort(keys);
@@ -171,6 +183,68 @@ public class Joml {
 		return j;
 	}
 
+	void testAll(String env, String num, String prefix) {
+		env(env,num);
+		List<String> keys = new ArrayList<>();
+		for (String key:map.keySet()) {if(key.startsWith(prefix)) keys.add(key); }
+		Collections.sort(keys);
+		for (String key:keys) {
+			String val = get(key);
+			print(""+key+"="+val);
+			if (empty(val)) {print("  no value"); continue;}
+			if (prefix.startsWith("dir")) {
+				File f = new File(val);
+				if (f.exists()) {
+					if (!f.isDirectory()) {
+						print("  file exists - not a directory"); continue;
+					}
+				} else {
+					try {
+						f.mkdirs();
+					} catch (Exception e) {
+						print("  ERROR: could not create directory: "+f); continue;
+					}
+				}
+				String fname = f.getAbsolutePath()+"/ftest-"+System.currentTimeMillis()/1000;
+				try {
+					writeFile(fname,"test write file\n");
+				} catch (Exception e) {
+					print("  ERROR: could not write to directory: "+f); continue;
+				}
+				try {new File(fname).delete();}
+				catch (Exception e) {
+					print("  ERROR: could not delete testfile: "+fname);
+				}
+				print("  "+f.getAbsolutePath()+" - OK");
+			} else if (prefix.startsWith("conn")) {
+				Pattern rx = Pattern.compile("(.*://)?([^:]+)(:.+)?");
+				Matcher m = rx.matcher(val);
+				if (m.matches()) {
+					String proto = m.group(1);
+					String addr = m.group(2);
+					String port = m.group(3);
+					int portnum = 80;
+					if (port!=null) portnum = Integer.parseInt(port.substring(1));
+					else {
+						if (eq(proto,"http://")) portnum = 80;
+						if (eq(proto,"https://")) portnum = 443;
+					}
+					try {
+						Socket s = new Socket();
+						s.connect(new InetSocketAddress(addr,portnum),1500);
+						s.close();
+						print("  "+val+" - connected OK");
+					} catch (Exception e) {
+						print("  ERROR: could not connect: "+val);
+						continue;
+					}
+				} else {
+					print("  ERROR: not a connection: "+val);
+				}
+			}
+		}
+	}
+
 	static String opt(String args[], int idx) {
 		if (idx>=args.length) usage("expected arg for "+args[idx-1]);
 		return args[idx];
@@ -180,6 +254,7 @@ public class Joml {
 		print("usage: java -jar joml.jar --env name --num num env.joml [other.joml...] --dir conf/");
 		fail(msg);
 	}
+
 
 	// ====== util tree shake =======
 	public static String readFile(String fname) {try {return new String(Files.readAllBytes(Paths.get(fname)));} catch (Exception e) {fail(e);return null;}}
