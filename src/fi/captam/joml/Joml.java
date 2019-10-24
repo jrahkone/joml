@@ -188,35 +188,45 @@ public class Joml {
 		List<String> keys = new ArrayList<>();
 		for (String key:map.keySet()) {if(key.startsWith(prefix)) keys.add(key); }
 		Collections.sort(keys);
+		if (prefix.startsWith("dir")) {
+			print("\ntesting all directory paths:");
+			print("===============================================================");
+		}
+		if (prefix.startsWith("conn")) {
+			print("\ntesting all connections:");
+			print("===============================================================");
+		}
 		for (String key:keys) {
 			String val = get(key);
-			print(""+key+"="+val);
+			System.out.print(String.format("%-15s = %-25s - ",key,val));
 			if (empty(val)) {print("  no value"); continue;}
 			if (prefix.startsWith("dir")) {
 				File f = new File(val);
 				if (f.exists()) {
 					if (!f.isDirectory()) {
-						print("  file exists - not a directory"); continue;
+						print("file exists - not a directory"); continue;
 					}
 				} else {
 					try {
 						f.mkdirs();
 					} catch (Exception e) {
-						print("  ERROR: could not create directory: "+f); continue;
+						print("ERROR: could not create directory"); continue;
 					}
 				}
 				String fname = f.getAbsolutePath()+"/ftest-"+System.currentTimeMillis()/1000;
 				try {
 					writeFile(fname,"test write file\n");
 				} catch (Exception e) {
-					print("  ERROR: could not write to directory: "+f); continue;
+					print("ERROR: could not write to directory"); continue;
 				}
 				try {new File(fname).delete();}
 				catch (Exception e) {
-					print("  ERROR: could not delete testfile: "+fname);
+					print("ERROR: could not delete testfile");
 				}
-				print("  "+f.getAbsolutePath()+" - OK");
+				print("OK");
 			} else if (prefix.startsWith("conn")) {
+				if (key.endsWith("-host")) {print("skip name *-host");continue;}
+				if (key.endsWith("-port")) {print("skip name *-port");continue;}
 				Pattern rx = Pattern.compile("(.*://)?([^:]+)(:.+)?");
 				Matcher m = rx.matcher(val);
 				if (m.matches()) {
@@ -233,13 +243,13 @@ public class Joml {
 						Socket s = new Socket();
 						s.connect(new InetSocketAddress(addr,portnum),1500);
 						s.close();
-						print("  "+val+" - connected OK");
+						print("OK");
 					} catch (Exception e) {
-						print("  ERROR: could not connect: "+val);
+						print("ERROR: could not connect");
 						continue;
 					}
 				} else {
-					print("  ERROR: not a connection: "+val);
+					print("skipping, not connection format");
 				}
 			}
 		}
