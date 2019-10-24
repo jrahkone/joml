@@ -90,7 +90,7 @@ foo.bar.again = jop
 
 [env.local.2 : base]  # env. prefix is only special keyword  inherits env.base 
   server.port = 8888  # this overrides server.port = 8080 above      
-  usb.userid = 22222  # this overrides usb.userid = 11111 above
+  esb.userid = 22222  # this overrides esb.userid = 11111 above
 
 ```
 
