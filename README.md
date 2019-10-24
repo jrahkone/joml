@@ -121,10 +121,11 @@ Reference implementation is done in java and is in src dir.
 Build with running "mk" shell script. Build produces joml.jar
 which can be run with:
 ```
-java -jar joml.jar env.joml local 2 in.tmpl out.conf
-java -jar joml.jar env.joml local 2 in.tmpl > out.conf
-java -jar joml.jar env.joml local 2 get server.port
+java -jar joml.jar env.joml --env local --num 2 --dir tmpl
 ```
+--dir tmpl means that tmpl directory has files ending with .tmpl
+and those files are evaluated so that eg. filename.conf.tmpl file is
+evaluated and written to file filename.conf in same directory.
 
 
 
