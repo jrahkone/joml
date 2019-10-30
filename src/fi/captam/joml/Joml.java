@@ -162,7 +162,10 @@ public class Joml {
 			if (eq(args[i],"--node")) { node = opt(args,++i); continue;}
 			if (eq(args[i],"--dump")) { dumpfname = opt(args,++i); continue;}
 			if (eq(args[i],"--test")) { testprefix = opt(args,++i); continue;}
-			if (args[i].matches(".*\\.(joml|yml|jml)$")) {fnames.add(args[i]);continue;}
+			if (args[i].matches(".*\\.(joml|yml|jml)$")) {
+				if (dumpfname!=null && args[i].contains("secret")) continue;
+				fnames.add(args[i]);continue;
+			}
 			usage("invalid arg: "+args[i]);
 		}
 		if (fnames.size()==0) usage("no joml files given");
@@ -172,11 +175,13 @@ public class Joml {
 			return j;
 		}
 		if (dumpfname!=null) {
+			j.env(env,num,node);
 			List<String> keys = new ArrayList<>(j.map.keySet());
 			Collections.sort(keys);
 			StringBuilder sb = new StringBuilder();
-			for (String key:keys) { sb.append(key+"\n");}
+			for (String key:keys) { sb.append(key+"="+j.get(key)+"\n");}
 			writeFile(dumpfname,sb);
+			return j;
 		}
 		if (dirname!=null) {
 			File dir = new File(dirname);
