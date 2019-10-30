@@ -58,7 +58,8 @@ public class Joml {
 	void _validate() { for (String key:map.keySet()) {String val = get(key);}}
 	String env_name = null;
 	String env_num = null;
-	void env(String name, String num) { env_name = name; env_num = num;}
+	String env_node = null;
+	void env(String name, String num, String node) { env_name = name; env_num = num; env_node = node;}
 	public String get(String key) {
 		int idx = key.lastIndexOf('.'); if (idx<0) return get("",key);
 		return get(key.substring(0,idx+1),key.substring(idx+1));
@@ -66,6 +67,7 @@ public class Joml {
 	public String get(String prefix, String key) {
 		if (eq("env-name",key)) return env_name;
 		if (eq("env-num",key)) return ""+env_num;
+		if (eq("env-node",key)) return ""+env_node;
 		if (env_name!=null) {
 			String envpr = "env."+env_name+"."+env_num;
 			String prefix2 = envpr+"."+prefix;
@@ -135,7 +137,8 @@ public class Joml {
 				line=line.substring(4,line.indexOf(')'));
 				boolean not = false;
 				if (line.startsWith("!")) { not = true; line=trim(line.substring(1));}
-				valif = eq(line,env_name); if (not) valif=!valif;
+				String p[] = line.split(",");
+				valif = eq(get(trim(p[0])),trim(p[1])); if (not) valif=!valif;
 				isif = true; continue;
 			}
 			if (line.startsWith("#end")) { isif=false; continue; }
@@ -150,12 +153,13 @@ public class Joml {
 		run(args);
 	}
 	public static Joml run(String...args) {
-		String env=null,num=null,dirname=null,dumpfname = null, testprefix=null;
+		String env=null,num=null,node=null,dirname=null,dumpfname = null, testprefix=null;
 		List<String> fnames = new ArrayList<>();
 		for (int i=0;i<args.length;i++) {
 			if (eq(args[i],"--dir")) { dirname = opt(args,++i); continue;}
 			if (eq(args[i],"--env")) { env = opt(args,++i); continue;}
 			if (eq(args[i],"--num")) { num = opt(args,++i); continue;}
+			if (eq(args[i],"--node")) { node = opt(args,++i); continue;}
 			if (eq(args[i],"--dump")) { dumpfname = opt(args,++i); continue;}
 			if (eq(args[i],"--test")) { testprefix = opt(args,++i); continue;}
 			if (args[i].matches(".*\\.(joml|yml|jml)$")) {fnames.add(args[i]);continue;}
@@ -164,7 +168,7 @@ public class Joml {
 		if (fnames.size()==0) usage("no joml files given");
 		Joml j = Joml.parse(fnames.toArray(new String[fnames.size()]));
 		if (testprefix!=null) {
-			j.testAll(env,num,testprefix);
+			j.testAll(env,num,null,testprefix);
 			return j;
 		}
 		if (dumpfname!=null) {
@@ -177,14 +181,14 @@ public class Joml {
 		if (dirname!=null) {
 			File dir = new File(dirname);
 			if (!dir.isDirectory()) usage("invalid directory: "+dirname);
-			j.env(env,num);
+			j.env(env,num,node);
 			j.evalDir(dir);
 		}
 		return j;
 	}
 
-	void testAll(String env, String num, String prefix) {
-		env(env,num);
+	void testAll(String env, String num, String node, String prefix) {
+		env(env,num,node);
 		List<String> keys = new ArrayList<>();
 		for (String key:map.keySet()) {if(key.startsWith(prefix)) keys.add(key); }
 		Collections.sort(keys);
