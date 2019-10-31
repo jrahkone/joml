@@ -179,7 +179,10 @@ public class Joml {
 			List<String> keys = new ArrayList<>(j.map.keySet());
 			Collections.sort(keys);
 			StringBuilder sb = new StringBuilder();
-			for (String key:keys) { sb.append(key+"="+j.get(key)+"\n");}
+			for (String key:keys) {
+				if (key.startsWith("env.")) continue;
+				sb.append(key+"="+j.get(key)+"\n");
+			}
 			writeFile(dumpfname,sb);
 			return j;
 		}
