@@ -2,8 +2,10 @@
 key1.txt1=key1 txt1
 key1.txt2=key1 txt2
 
-test=value1
+test=this is env1
 
+this $(notvar.foo) should not be evaluated and this $(foobar.129) either 
+
+hello not prod
 always here
-hello prod
 always here 2

@@ -143,7 +143,9 @@ public class Joml {
 			}
 			if (line.startsWith("#end")) { isif=false; continue; }
 			if (isif && !valif) {continue;}
-			sb.append(evalLine("",line)+"\n");
+			line = evalLine("",line);
+			line = line.replace("\\$","$");
+			sb.append(line+"\n");
 		}
 		return sb.toString();
 	}

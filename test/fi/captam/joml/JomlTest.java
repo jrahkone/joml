@@ -55,6 +55,11 @@ public class JomlTest {
 		assertFileContains("tmpl/tst.txt","always here 2");
 	}
 
+	public static void testEscape() throws Exception {
+		Joml j = Joml.run("env.joml","--dir","tmpl","--env","test","--num","1");
+		assertFileContains("tmpl/tst.txt","$(notvar");
+	}
+
 	static void assertFileContains(String fname, String str) throws Exception { if (!Joml.readFile(fname).contains(str)) throw new Exception();}
 	static void assertFileContainsNot(String fname, String str) throws Exception { if (Joml.readFile(fname).contains(str)) throw new Exception();}
 	static void assertEquals(Object o1, Object o2) throws Exception { if (!eq(o1,o2)) throw new Exception();}
