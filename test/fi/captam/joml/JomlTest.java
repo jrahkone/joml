@@ -60,9 +60,17 @@ public class JomlTest {
 		assertFileContains("tmpl/tst.txt","$(notvar");
 	}
 
+	public static void testOverride() throws Exception {
+		Joml j = Joml.run("env.joml","override.joml");
+		assertContains(j.get("map1.hello"),"override");
+		assertContains(j.get("map1.key1"),"override");
+		assertContains(j.get("map1.hello2"),"again");
+	}
+
 	static void assertFileContains(String fname, String str) throws Exception { if (!Joml.readFile(fname).contains(str)) throw new Exception();}
 	static void assertFileContainsNot(String fname, String str) throws Exception { if (Joml.readFile(fname).contains(str)) throw new Exception();}
 	static void assertEquals(Object o1, Object o2) throws Exception { if (!eq(o1,o2)) throw new Exception();}
+	static void assertContains(String o1, String o2) throws Exception { if (!o1.contains(o2)) throw new Exception();}
 	static void assertTrue(boolean v) throws Exception {if(!v) throw new Exception();}
 	public static boolean eq(Object o1, Object o2){	if (o1 == null && o2 == null) return true; if (o1 == null || o2 == null) return false; return o1.equals(o2);}
 	public static void fail(Object o) {print(o);throw new RuntimeException(""+o);}

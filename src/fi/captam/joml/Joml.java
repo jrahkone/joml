@@ -22,6 +22,7 @@ public class Joml {
 	}
 	Map<String,String> inherits = new LinkedHashMap<>();
 	Map<String,String> map = new LinkedHashMap<>();
+	Map<String,String> override = new LinkedHashMap<>();
 	void _parse(String fname) {
 		String str = readFile(fname);
 		int linenum = 0;
@@ -49,7 +50,8 @@ public class Joml {
 				String key = trim(line.substring(0,idx));
 				String value = trim(line.substring(idx+1));
 				if (!empty(prefix)) key = prefix+"."+key;
-				map.put(key,value);
+				if (fname.endsWith("override.joml")) { override.put(key,value);	}
+				else { map.put(key,value);}
 				line="";continue;
 			}
 			fail("invalid line: "+linenum+" in file:"+fname+" : "+line);
@@ -61,6 +63,7 @@ public class Joml {
 	String env_node = null;
 	void env(String name, String num, String node) { env_name = name; env_num = num; env_node = node;}
 	public String get(String key) {
+		if (override.containsKey(key)) return override.get(key);
 		int idx = key.lastIndexOf('.'); if (idx<0) return get("",key);
 		return get(key.substring(0,idx+1),key.substring(idx+1));
 	}
