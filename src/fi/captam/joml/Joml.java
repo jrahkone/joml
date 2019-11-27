@@ -14,6 +14,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Joml {
+	static String version = "1.0";
 	public static Joml parse(String...fnames) {
 		Joml j = new Joml();
 		for (String fname:fnames) j._parse(fname);
@@ -161,6 +162,7 @@ public class Joml {
 		String env=null,num=null,node=null,dirname=null,dumpfname = null, testprefix=null;
 		List<String> fnames = new ArrayList<>();
 		for (int i=0;i<args.length;i++) {
+			if (eq(args[i],"-v")) { print("joml version: "+version); return null;}
 			if (eq(args[i],"--dir")) { dirname = opt(args,++i); continue;}
 			if (eq(args[i],"--env")) { env = opt(args,++i); continue;}
 			if (eq(args[i],"--num")) { num = opt(args,++i); continue;}
