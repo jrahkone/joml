@@ -9,3 +9,4 @@ this $(notvar.foo) should not be evaluated and this $(foobar.129) either
 hello not prod
 always here
 always here 2
+

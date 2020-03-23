@@ -142,7 +142,10 @@ public class Joml {
 				boolean not = false;
 				if (line.startsWith("!")) { not = true; line=trim(line.substring(1));}
 				String p[] = line.split(",");
-				valif = eq(get(trim(p[0])),trim(p[1])); if (not) valif=!valif;
+				String v2=null;
+				try { v2=get(trim(p[1]));}catch(Exception e) {}
+				if (v2==null) v2=trim(p[1]);
+				valif = eq(get(trim(p[0])),v2); if (not) valif=!valif;
 				isif = true; continue;
 			}
 			if (line.startsWith("#end")) { isif=false; continue; }

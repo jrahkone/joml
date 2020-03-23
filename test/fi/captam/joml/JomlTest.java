@@ -53,6 +53,8 @@ public class JomlTest {
 		assertFileContainsNot("tmpl/tst.txt","hello not prod");
 		assertFileContains("tmpl/tst.txt","always here");
 		assertFileContains("tmpl/tst.txt","always here 2");
+		j = Joml.run("env.joml","--dir","tmpl","--env","prod","--num","1","--node","2");
+		assertFileContains("tmpl/tst.txt","node2");
 	}
 
 	public static void testEscape() throws Exception {
