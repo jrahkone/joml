@@ -294,7 +294,7 @@ public class Joml {
 	public static boolean eq(Object o1, Object o2){	if (o1 == null && o2 == null) return true; if (o1 == null || o2 == null) return false; return o1.equals(o2);}
 	public static boolean empty(String o){ return trim(o).length()==0;}
 	public static void print(Object o) {System.out.println(""+o);}
-	public static void fail(Object o) {print(o);throw new RuntimeException(""+o);}
+	public static void fail(Object o) {throw new RuntimeException(""+o);}
 	public static String nn(Object o) {return o==null?"":""+o;}
 	public static String trim(Object o) {return nn(o).trim();}
 	public static String[] lines(String str) { return str.split("\r\n|\r|\n");}
