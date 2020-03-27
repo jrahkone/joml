@@ -6,6 +6,8 @@ test=this is env1
 
 this $(notvar.foo) should not be evaluated and this $(foobar.129) either 
 
+this null defined, should not fail, just warn.
+
 hello not prod
 always here
 always here 2

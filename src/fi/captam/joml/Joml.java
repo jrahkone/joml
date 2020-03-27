@@ -82,7 +82,8 @@ public class Joml {
 			}
 		}
 		String fk = prefix+key; String val = map.get(fk);
-		if (val==null) fail("not found: "+fk);
+		if (val==null) {
+			warn("WARNING: '"+fk+"' unknown in "+evalfilename+" line: "+evalfilelinenum); return null;}
 		return evalLine(prefix,val);
 	}
 
@@ -132,19 +133,29 @@ public class Joml {
 		}
 		return sum;
 	}
+	String evalfilename;
+	int evalfilelinenum;
 	public String evalFile(String fname) {
+		evalfilename = fname;
+		evalfilelinenum = 0;
 		StringBuilder sb = new StringBuilder();
 		boolean isif = false;
 		boolean valif = false;
 		for (String line:lines(readFile(fname))) {
+			evalfilelinenum++;
 			if (line.startsWith("#if(")) {
 				line=line.substring(4,line.indexOf(')'));
 				boolean not = false;
 				if (line.startsWith("!")) { not = true; line=trim(line.substring(1));}
 				String p[] = line.split(",");
-				String v2=null;
-				try { v2=get(trim(p[1]));}catch(Exception e) {}
-				if (v2==null) v2=trim(p[1]);
+				String v2=trim(p[1]);
+				if (Character.isDigit(v2.charAt(0))) {
+					// number as string
+				} else if (v2.charAt(0)=='"') {
+					v2=v2.substring(1,v2.length()-1);
+				} else {
+					v2=get(trim(p[1]));
+				}
 				valif = eq(get(trim(p[0])),v2); if (not) valif=!valif;
 				isif = true; continue;
 			}
@@ -295,6 +306,7 @@ public class Joml {
 	public static boolean empty(String o){ return trim(o).length()==0;}
 	public static void print(Object o) {System.out.println(""+o);}
 	public static void fail(Object o) {throw new RuntimeException(""+o);}
+	public static void warn(Object o) {print(o);}
 	public static String nn(Object o) {return o==null?"":""+o;}
 	public static String trim(Object o) {return nn(o).trim();}
 	public static String[] lines(String str) { return str.split("\r\n|\r|\n");}

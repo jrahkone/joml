@@ -6,11 +6,13 @@ test=$(map1.key1)
 
 this \$(notvar.foo) should not be evaluated and this \$(foobar.129) either 
 
-#if(!env-name,prod)
+this $(var.is.not) defined, should not fail, just warn.
+
+#if(!env-name,"prod")
 hello not prod
 #end !prod
 always here
-#if(env-name,prod)
+#if(env-name,"prod")
 hello prod
 #end
 always here 2
