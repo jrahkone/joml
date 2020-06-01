@@ -139,7 +139,7 @@ public class Joml {
 		evalfilename = fname;
 		evalfilelinenum = 0;
 		StringBuilder sb = new StringBuilder();
-		boolean isif = false;
+		int isif = 0;
 		boolean valif = false;
 		for (String line:lines(readFile(fname))) {
 			evalfilelinenum++;
@@ -157,10 +157,10 @@ public class Joml {
 					v2=get(trim(p[1]));
 				}
 				valif = eq(get(trim(p[0])),v2); if (not) valif=!valif;
-				isif = true; continue;
+				isif++; continue;
 			}
-			if (line.startsWith("#end")) { isif=false; continue; }
-			if (isif && !valif) {continue;}
+			if (line.startsWith("#end")) { isif--; continue; }
+			if (isif>0 && !valif) {continue;}
 			line = evalLine("",line);
 			line = line.replace("\\$","$");
 			sb.append(line+"\n");
