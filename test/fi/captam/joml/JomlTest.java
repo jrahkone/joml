@@ -69,6 +69,18 @@ public class JomlTest {
 		assertContains(j.get("map1.hello2"),"again");
 	}
 
+	public static void testNested() throws Exception {
+		Joml j = Joml.run("env.joml","--dir","tmpl","--env","test","--num","1");
+		assertFileContains("tmpl/tst.txt","nested-true1");
+		assertFileContains("tmpl/tst.txt","nested-true2");
+		assertFileContains("tmpl/tst.txt","nested-true3");
+		assertFileContains("tmpl/tst.txt","nested-true4");
+		assertFileContainsNot("tmpl/tst.txt","nested-false1");
+		assertFileContainsNot("tmpl/tst.txt","nested-false2");
+		assertFileContainsNot("tmpl/tst.txt","nested-false3");
+		assertFileContainsNot("tmpl/tst.txt","nested-false4");
+	}
+
 	static void assertFileContains(String fname, String str) throws Exception { if (!Joml.readFile(fname).contains(str)) throw new Exception();}
 	static void assertFileContainsNot(String fname, String str) throws Exception { if (Joml.readFile(fname).contains(str)) throw new Exception();}
 	static void assertEquals(Object o1, Object o2) throws Exception { if (!eq(o1,o2)) throw new Exception();}

@@ -140,10 +140,12 @@ public class Joml {
 		evalfilelinenum = 0;
 		StringBuilder sb = new StringBuilder();
 		int isif = 0;
-		boolean valif = false;
+		boolean valif[] = new boolean[10];
 		for (String line:lines(readFile(fname))) {
 			evalfilelinenum++;
+			//print(evalfilelinenum+":"+line+" "+valif[isif]+" "+isif);
 			if (line.startsWith("#if(")) {
+				if (isif>0 && !valif[isif-1]) { valif[isif] = false; isif++; continue;}
 				line=line.substring(4,line.indexOf(')'));
 				boolean not = false;
 				if (line.startsWith("!")) { not = true; line=trim(line.substring(1));}
@@ -156,11 +158,11 @@ public class Joml {
 				} else {
 					v2=get(trim(p[1]));
 				}
-				valif = eq(get(trim(p[0])),v2); if (not) valif=!valif;
+				valif[isif] = eq(get(trim(p[0])),v2); if (not) valif[isif]=!valif[isif];
 				isif++; continue;
 			}
 			if (line.startsWith("#end")) { isif--; continue; }
-			if (isif>0 && !valif) {continue;}
+			if (isif>0 && !valif[isif-1]) {continue;}
 			line = evalLine("",line);
 			line = line.replace("\\$","$");
 			sb.append(line+"\n");
