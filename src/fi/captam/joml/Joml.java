@@ -14,7 +14,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Joml {
-	static String version = "1.0";
+	static String version = "1.4";
 	public static Joml parse(String...fnames) {
 		Joml j = new Joml();
 		for (String fname:fnames) j._parse(fname);
