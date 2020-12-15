@@ -115,6 +115,15 @@ Syntax
 - $(var.name) will be substituted with config var.name value when evaluated
 
 
+Build
+-----
+
+```
+git clone https://github.com/jrahkone/joml.git
+cd joml
+./mk
+```
+
 Tool
 -----
 Reference implementation is done in java and is in src dir.
