@@ -1,5 +1,6 @@
 #!/bin/sh
 set -e
+mkdir -p bin
 echo "compiling joml"
 javac -d bin src/fi/captam/joml/*.java test/fi/captam/joml/*.java
 echo "testing"
